@@ -1,0 +1,28 @@
+{
+	"name": "@harvestmoon/root",
+	"type": "module",
+	"private": true,
+	"packageManager": "pnpm@10.33.0",
+	"engines": {
+		"node": ">=24.14.1"
+	},
+	"scripts": {
+		"build": "tsc --build tsconfig.build.json",
+		"type-check": "tsc --build tsconfig.build.json && tsc -p scripts/tsconfig.json",
+		"bootstrap": "tsx --env-file=.env scripts/bootstrap.ts",
+		"force-rebuild": "tsx --env-file=.env scripts/bootstrap.ts --force-rebuild",
+		"serve": "tsx --env-file=.env scripts/bootstrap.ts --serve",
+		"clean": "tsx --env-file=.env scripts/clean.ts dist",
+		"clean:registry": "tsx --env-file=.env scripts/clean.ts registry store",
+		"clean:all": "tsx --env-file=.env scripts/clean.ts all",
+		"scaffold": "tsx --env-file=.env scripts/scaffold.ts",
+		"scaffold:regen": "tsx --env-file=.env scripts/scaffold.ts --regenerate",
+		"create-npmc": "tsx --env-file=.env scripts/create-npmc.ts"
+	},
+	"devDependencies": {
+		"@types/node": "^25.6.0",
+		"tsx": "^4.21.0",
+		"typescript": "^6.0.3",
+		"verdaccio": "^6.5.1"
+	}
+}

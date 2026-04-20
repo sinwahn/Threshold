@@ -1,0 +1,37 @@
+{
+	"compilerOptions": {
+		"target": "es2025",
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"types": [
+			"node"
+		],
+
+		"verbatimModuleSyntax": true,
+		
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
+
+		"composite": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true,
+		
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		
+		// TS 6.0: emit types in deterministic order for 7.0 (Go compiler) parity
+		"stableTypeOrdering": true,
+
+		// NOTE: rewriteRelativeImportExtensions + allowImportingTsExtensions
+		// removed intentionally. The .d.ts rewrite bug (microsoft/TypeScript#61037)
+		// ships broken .ts extensions to consumers. Library source must use .js
+		// imports instead (standard NodeNext style -- tsc resolves .js -> .ts
+		// source files at compile time, emits .js literally).
+		"allowImportingTsExtensions": false,
+		"rewriteRelativeImportExtensions": false,
+		
+		"noEmit": false,
+	}
+}

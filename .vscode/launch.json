@@ -1,0 +1,117 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Bootstrap (build changed)",
+			"program": "${workspaceFolder}/scripts/bootstrap.ts",
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--import",
+				"tsx",
+				"--env-file=.env",
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"${workspaceFolder}/scripts/common/log.ts"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Force rebuild (rebuild all)",
+			"program": "${workspaceFolder}/scripts/bootstrap.ts",
+			"args": [
+				"--force-rebuild"
+			],
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--import",
+				"tsx",
+				"--env-file=.env"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"${workspaceFolder}/scripts/common/log.ts"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Serve (build changed + keep alive)",
+			"program": "${workspaceFolder}/scripts/bootstrap.ts",
+			"args": [
+				"--serve"
+			],
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--import",
+				"tsx",
+				"--env-file=.env"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"${workspaceFolder}/scripts/common/log.ts"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Clean dist",
+			"program": "${workspaceFolder}/scripts/clean.ts",
+			"args": [
+				"dist"
+			],
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--import",
+				"tsx",
+				"--env-file=.env"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"${workspaceFolder}/scripts/common/log.ts"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Clean registry + store",
+			"program": "${workspaceFolder}/scripts/clean.ts",
+			"args": [
+				"registry",
+				"store"
+			],
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--import",
+				"tsx",
+				"--env-file=.env"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"${workspaceFolder}/scripts/common/log.ts"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Clean all",
+			"program": "${workspaceFolder}/scripts/clean.ts",
+			"args": [
+				"all"
+			],
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--import",
+				"tsx",
+				"--env-file=.env"
+			],
+			"skipFiles": [
+				"<node_internals>/**",
+				"${workspaceFolder}/scripts/common/log.ts"
+			]
+		}
+	]
+}

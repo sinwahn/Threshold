@@ -1,0 +1,16 @@
+node_modules/
+
+dist
+
+.build-info.json
+pnpm-lock.yaml
+package-lock.json
+tsconfig.tsbuildinfo
+
+.env
+.npmrc
+verdaccio-config.yaml
+
+how/
+data/
+out/
