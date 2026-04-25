@@ -79,7 +79,7 @@ export const config = Object.freeze({
 	pingTimeoutMs: 30_000,
 	pingIntervalMs: 100,
 	killTimeoutMs: 3_000,
-	fetchTimeoutMs: 5_000,
+	fetchTimeoutMs: 60_000,
 })
 
 export type Config = typeof config

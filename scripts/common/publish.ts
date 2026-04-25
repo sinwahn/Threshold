@@ -54,7 +54,7 @@ export class PublishPipeline {
 		}
 
 		this.shell.run(
-			`pnpm publish --registry ${this.registry.url} --tag=latest --no-git-checks`,
+			`pnpm publish --registry ${this.registry.getUrl()} --tag=latest --no-git-checks`,
 			{ cwd: target.path },
 		)
 
