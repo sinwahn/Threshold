@@ -4,8 +4,8 @@
 //   tsx --env-file=.env scripts/clean.ts [targets...]
 //
 // Targets (combine any):
-//   dist       Remove dist/ and build info from every package
-//   registry   Wipe Verdaccio data dir (storage + config + pid) + scrub global pnpm config
+//   dist       Remove dist/ and publish stamps from every package
+//   registry   Wipe Verdaccio data dir (storage + generated config)
 //   store      Run pnpm store prune + delete scoped metadata cache
 //   modules    Remove all node_modules dirs and pnpm-lock.yaml
 //   all        All of the above
@@ -13,11 +13,10 @@
 // No arguments = dist (safe default)
 
 import { execSync } from 'node:child_process'
-import { existsSync, rmSync, readdirSync, Dirent } from 'node:fs'
+import { existsSync, rmSync, readdirSync, type Dirent } from 'node:fs'
 import { join } from 'node:path'
 import { config } from './common/config.js'
-import { removePublishAuth, scrubGlobalPnpmConfig } from './common/registry.js'
-import { log, warn, fail } from './common/log.js'
+import { log, warn, exitWithError } from './common/log.js'
 
 const { names } = config
 const VALID_TARGETS = new Set(['dist', 'registry', 'store', 'modules'] as const)
@@ -27,18 +26,18 @@ function parseTargets(): Set<Target> {
 	const args = process.argv.slice(2).filter(a => !a.startsWith('-'))
 
 	if (args.length === 0)
-		return new Set < Target > (['dist'])
+		return new Set<Target>(['dist'])
 
 	if (args.includes('all'))
 		return new Set(VALID_TARGETS)
 
-	const targets = new Set < Target > ()
+	const selected = new Set<Target>()
 	for (const arg of args) {
 		if (!VALID_TARGETS.has(arg as Target))
-			throw new Error(`Unknown clean target: "${arg}". Valid: ${[...VALID_TARGETS].join(', ')}`)
-		targets.add(arg as Target)
+			throw new Error(`Unknown clean target: "${arg}". Valid: ${[...VALID_TARGETS, 'all'].join(', ')}`)
+		selected.add(arg as Target)
 	}
-	return targets
+	return selected
 }
 
 function removeIfExists(path: string, label: string): void {
@@ -47,28 +46,20 @@ function removeIfExists(path: string, label: string): void {
 	log(`Removed ${label}: ${path}`)
 }
 
-type packageCallback_t = (packageFolder: Dirent<string>, packagePath: string) => void
-
-function forEachPackage(callback: packageCallback_t) {
+function forEachPackage(callback: (entry: Dirent, packagePath: string) => void): void {
+	if (!existsSync(config.packagesDir)) return
 	for (const entry of readdirSync(config.packagesDir, { withFileTypes: true })) {
-		const packagePath = join(entry.parentPath, entry.name)
 		if (entry.isDirectory())
-			callback(entry, packagePath)
+			callback(entry, join(config.packagesDir, entry.name))
 	}
 }
 
 function cleanDist(): void {
-	log('--- Cleaning dist and build stamps ---')
-
-	if (!existsSync(config.packagesDir)) {
-		warn('No packages/ directory found')
-		return
-	}
-
+	log('--- Cleaning dist and publish stamps ---')
 	forEachPackage((entry, packagePath) => {
 		removeIfExists(join(packagePath, names.dist), `${names.dist} (${entry.name})`)
-		removeIfExists(join(packagePath, names.buildInfo), `build info (${entry.name})`)
-		removeIfExists(join(packagePath, names.tsconfigTsBuildinfo), `ts build info (${entry.name})`)
+		removeIfExists(join(packagePath, names.trBuildInfo), `publish stamp (${entry.name})`)
+		removeIfExists(join(packagePath, names.tsBuildInfo), `ts build info (${entry.name})`)
 	})
 }
 
@@ -77,8 +68,6 @@ function cleanRegistry(): void {
 	// Wipe the whole verdaccio/ dir (storage + generated config + anything else).
 	// Previously only storage was removed, leaving the config file orphaned.
 	removeIfExists(config.verdaccioDir, 'verdaccio data dir')
-	removePublishAuth()
-	scrubGlobalPnpmConfig()
 }
 
 function cleanStore(): void {
@@ -105,14 +94,10 @@ function cleanModules(): void {
 
 	removeIfExists(join(config.rootDir, 'node_modules'), 'root node_modules')
 	removeIfExists(config.lockfilePath, names.lockfile)
-	removePublishAuth()
 
-	if (!existsSync(config.packagesDir)) return
-
-	for (const entry of readdirSync(config.packagesDir, { withFileTypes: true })) {
-		if (!entry.isDirectory()) continue
-		removeIfExists(join(config.packagesDir, entry.name, 'node_modules'), `node_modules (${entry.name})`)
-	}
+	forEachPackage((entry, packagePath) => {
+		removeIfExists(join(packagePath, 'node_modules'), `node_modules (${entry.name})`)
+	})
 }
 
 function main(): void {
@@ -130,6 +115,5 @@ function main(): void {
 try {
 	main()
 } catch (error) {
-	fail(error)
-	process.exit(1)
+	exitWithError(error)
 }

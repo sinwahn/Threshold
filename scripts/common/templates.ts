@@ -1,68 +1,13 @@
 // scripts/common/templates.ts
 //
-// Every generated config / scaffold file is defined here as a pure function.
-// Path segments come from config.names so nothing is hardcoded.
+// Pure functions producing the file contents written by scaffold.ts and
+// create-npmrc.ts. Path segments come from config.names so renaming a folder
+// is a one-line change. These are the only places writing config files into
+// the workspace; everything else either runs in-memory or writes to data/.
 
 import { config } from './config.js'
 
 const { names } = config
-
-// -- Helper: inline-safe stringify for use inside double-quoted `node -e "..."` --
-// Single quotes inside are fine; double quotes would collide with the outer quotes.
-function inlineJson(obj: Record<string, unknown>): string {
-	return JSON.stringify(obj).replace(/"/g, "\\\"")
-}
-
-export interface VerdaccioYamlArgs {
-	storageDir: string
-	namespace: string
-	port: string
-}
-
-export function verdaccioYaml({ storageDir, namespace, port }: VerdaccioYamlArgs): string {
-	return [
-		`storage: '${storageDir}'`,
-		``,
-		`uplinks:`,
-		`  npmjs:`,
-		`    url: https://registry.npmjs.org/`,
-		``,
-		`packages:`,
-		`  '@${namespace}/*':`,
-		`    access: $all`,
-		`    publish: $all`,
-		`    unpublish: $all`,
-		``,
-		`  '**':`,
-		`    access: $all`,
-		`    proxy: npmjs`,
-		``,
-		`server:`,
-		`  keepAliveTimeout: 60`,
-		``,
-		`listen: '0.0.0.0:${port}'`,
-		``,
-		`log:`,
-		`  type: stdout`,
-		`  format: pretty`,
-		`  level: warn`,
-	].join('\n')
-}
-
-export interface NpmrcArgs {
-	namespace: string
-	registryUrl: string
-	registryHost: string
-	authToken: string
-}
-
-export function npmrc({ namespace, registryUrl, registryHost, authToken }: NpmrcArgs): string {
-	return [
-		`@${namespace}:registry=${registryUrl}`,
-		`//${registryHost}/:_authToken=${authToken}`,
-		``,
-	].join('\n')
-}
 
 export interface PackageJsonArgs {
 	namespace: string
@@ -72,12 +17,11 @@ export interface PackageJsonArgs {
 }
 
 export function packageJson({ namespace, name, version, dependencies }: PackageJsonArgs): string {
-	// The post-build write of {"type":"commonjs"} into dist/cjs/ is how dual
-	// packages tell Node to treat the CJS output as CommonJS at runtime.
-	// We use `require('fs')` (not bare `fs`) because `fs` is NOT a Node global.
 	// `node -e` evaluates in CJS mode regardless of the enclosing package.json
-	// "type" field, so require() is always available.
-	const rmDist = `node -e "require('fs').rmSync('${names.dist}',{recursive:true,force:true})"`
+	// "type" field, so require() is always available. We use require('node:fs')
+	// (with the explicit `node:` scheme, not bare 'fs') so the script works on
+	// Node versions that have made bare 'fs' more strict in ESM contexts.
+	const rmDist = `node -e "require('node:fs').rmSync('${names.dist}',{recursive:true,force:true})"`
 
 	const pkg: Record<string, unknown> = {
 		name: `@${namespace}/${name}`,
@@ -86,16 +30,15 @@ export function packageJson({ namespace, name, version, dependencies }: PackageJ
 		exports: {
 			'.': {
 				import: {
-					types: `./${names.distEsm}/index.d.ts`,
-					default: `./${names.distEsm}/index.js`,
+					types: `./${names.dist}/index.d.ts`,
+					default: `./${names.dist}/index.js`,
+					source: `./${names.src}/index.ts`,
 				},
 			},
 		},
 		files: [names.dist],
 		scripts: {
-			build: [
-				'tsc -p tsconfig.json',
-			].join(' && '),
+			build: 'tsc -p tsconfig.json',
 			clean: rmDist,
 		},
 		devDependencies: {
@@ -115,16 +58,16 @@ export function packageJson({ namespace, name, version, dependencies }: PackageJ
 	return JSON.stringify(pkg, null, '\t')
 }
 
-export interface TsconfigEsmArgs {
+export interface TsconfigPackageArgs {
 	references: string[]
 }
 
-export function tsconfigEsm({ references }: TsconfigEsmArgs): string {
+export function tsconfigPackage({ references }: TsconfigPackageArgs): string {
 	const tsconfig: Record<string, unknown> = {
 		extends: '../../tsconfig.base.json',
 		compilerOptions: {
 			rootDir: names.src,
-			outDir: names.distEsm,
+			outDir: names.dist,
 		},
 		include: [names.src],
 	}
@@ -137,4 +80,19 @@ export function tsconfigEsm({ references }: TsconfigEsmArgs): string {
 
 export function indexTs(): string {
 	return `// entry point\n`
+}
+
+export interface NpmrcArgs {
+	namespace: string
+	registryUrl: string
+	registryHost: string
+	authToken: string
+}
+
+export function npmrc({ namespace, registryUrl, registryHost, authToken }: NpmrcArgs): string {
+	return [
+		`@${namespace}:registry=${registryUrl}`,
+		`//${registryHost}/:_authToken=${authToken}`,
+		``,
+	].join('\n')
 }

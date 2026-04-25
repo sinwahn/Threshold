@@ -6,12 +6,22 @@
 			"request": "launch",
 			"name": "Bootstrap (build changed)",
 			"program": "${workspaceFolder}/scripts/bootstrap.ts",
+			"args": ["--export-api"],
 			"runtimeExecutable": "node",
-			"runtimeArgs": [
-				"--import",
-				"tsx",
-				"--env-file=.env",
-			],
+			"runtimeArgs": ["--import", "tsx", "--env-file=.env"],
+			"skipFiles": [
+				"<node_internals>/**",
+				"${workspaceFolder}/scripts/common/log.ts"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Export API only",
+			"program": "${workspaceFolder}/scripts/bootstrap.ts",
+			"args": ["--export-api", "--skip-registry-operations"],
+			"runtimeExecutable": "node",
+			"runtimeArgs": ["--import", "tsx", "--env-file=.env"],
 			"skipFiles": [
 				"<node_internals>/**",
 				"${workspaceFolder}/scripts/common/log.ts"
@@ -22,15 +32,9 @@
 			"request": "launch",
 			"name": "Force rebuild (rebuild all)",
 			"program": "${workspaceFolder}/scripts/bootstrap.ts",
-			"args": [
-				"--force-rebuild"
-			],
+			"args": ["--force-rebuild", "--export-api"],
 			"runtimeExecutable": "node",
-			"runtimeArgs": [
-				"--import",
-				"tsx",
-				"--env-file=.env"
-			],
+			"runtimeArgs": ["--import", "tsx", "--env-file=.env"],
 			"skipFiles": [
 				"<node_internals>/**",
 				"${workspaceFolder}/scripts/common/log.ts"
@@ -41,15 +45,34 @@
 			"request": "launch",
 			"name": "Serve (build changed + keep alive)",
 			"program": "${workspaceFolder}/scripts/bootstrap.ts",
-			"args": [
-				"--serve"
-			],
+			"args": ["--serve", "--export-api"],
 			"runtimeExecutable": "node",
-			"runtimeArgs": [
-				"--import",
-				"tsx",
-				"--env-file=.env"
-			],
+			"runtimeArgs": ["--import", "tsx", "--env-file=.env"],
+			"skipFiles": [
+				"<node_internals>/**",
+				"${workspaceFolder}/scripts/common/log.ts"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Create npmrc",
+			"program": "${workspaceFolder}/scripts/create-npmrc.ts",
+			"runtimeExecutable": "node",
+			"runtimeArgs": ["--import", "tsx", "--env-file=.env"],
+			"skipFiles": [
+				"<node_internals>/**",
+				"${workspaceFolder}/scripts/common/log.ts"
+			]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Scaffold (regenerate)",
+			"program": "${workspaceFolder}/scripts/scaffold.ts",
+			"args": ["--regenerate"],
+			"runtimeExecutable": "node",
+			"runtimeArgs": ["--import", "tsx", "--env-file=.env"],
 			"skipFiles": [
 				"<node_internals>/**",
 				"${workspaceFolder}/scripts/common/log.ts"
@@ -60,15 +83,9 @@
 			"request": "launch",
 			"name": "Clean dist",
 			"program": "${workspaceFolder}/scripts/clean.ts",
-			"args": [
-				"dist"
-			],
+			"args": ["dist"],
 			"runtimeExecutable": "node",
-			"runtimeArgs": [
-				"--import",
-				"tsx",
-				"--env-file=.env"
-			],
+			"runtimeArgs": ["--import", "tsx", "--env-file=.env"],
 			"skipFiles": [
 				"<node_internals>/**",
 				"${workspaceFolder}/scripts/common/log.ts"
@@ -79,16 +96,9 @@
 			"request": "launch",
 			"name": "Clean registry + store",
 			"program": "${workspaceFolder}/scripts/clean.ts",
-			"args": [
-				"registry",
-				"store"
-			],
+			"args": ["registry", "store"],
 			"runtimeExecutable": "node",
-			"runtimeArgs": [
-				"--import",
-				"tsx",
-				"--env-file=.env"
-			],
+			"runtimeArgs": ["--import", "tsx", "--env-file=.env"],
 			"skipFiles": [
 				"<node_internals>/**",
 				"${workspaceFolder}/scripts/common/log.ts"
@@ -99,15 +109,9 @@
 			"request": "launch",
 			"name": "Clean all",
 			"program": "${workspaceFolder}/scripts/clean.ts",
-			"args": [
-				"all"
-			],
+			"args": ["all"],
 			"runtimeExecutable": "node",
-			"runtimeArgs": [
-				"--import",
-				"tsx",
-				"--env-file=.env"
-			],
+			"runtimeArgs": ["--import", "tsx", "--env-file=.env"],
 			"skipFiles": [
 				"<node_internals>/**",
 				"${workspaceFolder}/scripts/common/log.ts"

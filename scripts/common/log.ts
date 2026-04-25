@@ -10,6 +10,13 @@ export function warn(...args: unknown[]): void {
 	console.warn(`[${timestamp()}] WARN`, ...args)
 }
 
-export function fail(...args: unknown[]): void {
-	console.error(`[${timestamp()}] ERR`, ...args)
+// Top-level entry handler. Prints the error verbatim, then dumps any
+// captured subprocess stdio (execSync errors carry .stdout/.stderr fields
+// that console.error doesn't surface), then exits.
+export function exitWithError(error: unknown): never {
+	console.error(error)
+	const subprocess = error as { stdout?: string | Buffer, stderr?: string | Buffer }
+	if (subprocess.stdout) process.stderr.write(subprocess.stdout)
+	if (subprocess.stderr) process.stderr.write(subprocess.stderr)
+	process.exit(1)
 }

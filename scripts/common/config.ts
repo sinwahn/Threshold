@@ -22,7 +22,12 @@ const namespace = requireEnv('NPM_NAMESPACE')
 const authToken = requireEnv('VERDACCIO_AUTH_TOKEN')
 const outputSubdir = optionalEnv('SCRIPT_OUTPUT_DIR', 'out')
 
-const registryHost = `localhost:${port}`
+// 'localhost' may resolve to ::1 on Node >=17 (IPv6 first), but Verdaccio
+// historically binds IPv4-only. Each fetch then waits for the IPv6 attempt
+// to time out before falling back -- compounds across many publish/verify
+// fetches. Using 127.0.0.1 explicitly skips DNS entirely.
+const registryHostname = '127.0.0.1'
+const registryHost = `${registryHostname}:${port}`
 const registryUrl = `http://${registryHost}`
 
 // Every segment that appears in a path or filename lives here.
@@ -34,14 +39,13 @@ const names = Object.freeze({
 	packages: 'packages',
 	scripts: 'scripts',
 	dist: 'dist',
-	distEsm: 'dist/esm',
 	src: 'src',
 	verdaccioConfig: 'verdaccio-config.yaml',
-	buildInfo: '.build-info.json',
+	trBuildInfo: 'trbuildinfo.json',
 	publishNpmrc: '.npmrc',
 	lockfile: 'pnpm-lock.yaml',
 	tsconfigBuild: 'tsconfig.build.json',
-	tsconfigTsBuildinfo: 'tsconfig.tsbuildinfo'
+	tsBuildInfo: 'tsconfig.tsbuildinfo',
 })
 
 const dataDir = resolve(ROOT_DIR, names.data)
@@ -51,7 +55,7 @@ export const config = Object.freeze({
 	namespace,
 	authToken,
 	port,
-
+	registryHostname,
 	registryHost,
 	registryUrl,
 	pingUrl: `${registryUrl}/-/ping`,
@@ -63,7 +67,6 @@ export const config = Object.freeze({
 	packagesDir: resolve(ROOT_DIR, names.packages),
 	outputDir: resolve(ROOT_DIR, outputSubdir),
 
-	publishNpmrcPath: resolve(ROOT_DIR, names.publishNpmrc),
 	lockfilePath: resolve(ROOT_DIR, names.lockfile),
 	tsconfigBuildPath: resolve(ROOT_DIR, names.tsconfigBuild),
 
@@ -72,9 +75,11 @@ export const config = Object.freeze({
 	storageDir: resolve(verdaccioDir, names.storage),
 	verdaccioConfigPath: resolve(verdaccioDir, names.verdaccioConfig),
 
+	publishConcurrency: 8,
 	pingTimeoutMs: 30_000,
-	pingIntervalMs: 500,
+	pingIntervalMs: 100,
 	killTimeoutMs: 3_000,
+	fetchTimeoutMs: 5_000,
 })
 
 export type Config = typeof config

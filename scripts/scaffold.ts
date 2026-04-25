@@ -8,8 +8,9 @@ import { parseArgs } from 'node:util'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { config } from './common/config.js'
-import { packageJson, tsconfigEsm, indexTs } from './common/templates.js'
-import { log, warn, fail } from './common/log.js'
+import { packageJson, tsconfigPackage, indexTs } from './common/templates.js'
+import { log, warn, exitWithError } from './common/log.js'
+
 
 // -- Args --
 
@@ -53,7 +54,8 @@ function parse(): ParsedArgs {
 }
 
 
-// -- tsconfig.build.json manipulation --
+// -- tsconfig.build.json reference registration --
+//
 // NOTE: this uses JSON.parse, so tsconfig.build.json must NOT contain comments.
 // Comments are valid in tsconfig by convention (JSONC), but root solution-style
 // configs rarely need them. If you add comments, this automation will refuse
@@ -68,23 +70,12 @@ interface TsconfigBuildShape {
 function registerPackageReference(pkgName: string): void {
 	const filePath = config.tsconfigBuildPath
 
-	let raw: string
-	try {
-		raw = readFileSync(filePath, 'utf8')
-	} catch {
+	if (!existsSync(filePath)) {
 		warn(`${filePath} not found; skipping reference registration`)
 		return
 	}
 
-	let tsconfig: TsconfigBuildShape
-	try {
-		tsconfig = JSON.parse(raw) as TsconfigBuildShape
-	} catch (error) {
-		const msg = error instanceof Error ? error.message : String(error)
-		warn(`Could not parse ${filePath} as JSON (comments present?): ${msg}`)
-		warn(`Add { "path": "${config.names.packages}/${pkgName}" } manually`)
-		return
-	}
+	const tsconfig = JSON.parse(readFileSync(filePath, 'utf8')) as TsconfigBuildShape
 
 	tsconfig.references ??= []
 	const desiredPath = `${config.names.packages}/${pkgName}`
@@ -99,9 +90,9 @@ function registerPackageReference(pkgName: string): void {
 }
 
 
-// -- Package writing --
+// -- Package config writing --
 
-function writeConfig(pkgDir: string, name: string, version: string, depNames: string[]): void {
+function writePackageConfig(pkgDir: string, name: string, version: string, depNames: string[]): void {
 	writeFileSync(
 		join(pkgDir, 'package.json'),
 		packageJson({ namespace: config.namespace, name, version, dependencies: depNames }) + '\n',
@@ -110,10 +101,10 @@ function writeConfig(pkgDir: string, name: string, version: string, depNames: st
 
 	writeFileSync(
 		join(pkgDir, 'tsconfig.json'),
-		tsconfigEsm({ references: depNames }) + '\n',
+		tsconfigPackage({ references: depNames }) + '\n',
 		'utf8',
 	)
-	
+
 	log(`Wrote configs for ${name}`)
 }
 
@@ -124,9 +115,9 @@ function createPackage(name: string, version: string, depNames: string[]): void 
 		throw new Error(`Package directory already exists: ${pkgDir}`)
 
 	mkdirSync(join(pkgDir, config.names.src), { recursive: true })
-	writeConfig(pkgDir, name, version, depNames)
+	writePackageConfig(pkgDir, name, version, depNames)
 
-	writeFileSync(join(pkgDir, config.names.src, 'index.js'), indexTs(), 'utf8')
+	writeFileSync(join(pkgDir, config.names.src, 'index.ts'), indexTs(), 'utf8')
 	log(`Created package scaffold at ${config.names.packages}/${name}/`)
 
 	registerPackageReference(name)
@@ -153,13 +144,13 @@ function regenerateAll(): void {
 			version?: string
 			dependencies?: Record<string, string>
 		}
-		const version = existing.version ?? '0.1.0'
 
+		const version = existing.version ?? '0.1.0'
 		const depNames = Object.keys(existing.dependencies ?? {})
 			.filter(d => d.startsWith(scopePrefix))
 			.map(d => d.slice(scopePrefix.length))
 
-		writeConfig(pkgDir, entry.name, version, depNames)
+		writePackageConfig(pkgDir, entry.name, version, depNames)
 	}
 
 	log('Regenerated all package configs')
@@ -167,16 +158,12 @@ function regenerateAll(): void {
 
 function main(): void {
 	const parsed = parse()
-
-	if (parsed.mode === 'regenerate')
-		regenerateAll()
-	else
-		createPackage(parsed.name, parsed.version, parsed.dependencies)
+	if (parsed.mode === 'regenerate') regenerateAll()
+	else createPackage(parsed.name, parsed.version, parsed.dependencies)
 }
 
 try {
 	main()
 } catch (error) {
-	fail(error)
-	process.exit(1)
+	exitWithError(error)
 }

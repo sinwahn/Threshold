@@ -2,14 +2,16 @@
 	"name": "@harvestmoon/root",
 	"type": "module",
 	"private": true,
-	"packageManager": "pnpm@10.33.0",
+	"packageManager": "pnpm@10.33.2",
 	"engines": {
-		"node": ">=24.14.1"
+		"node": ">=24.0.0"
 	},
 	"scripts": {
 		"build": "tsc --build tsconfig.build.json",
 		"type-check": "tsc --build tsconfig.build.json && tsc -p scripts/tsconfig.json",
 		"bootstrap": "tsx --env-file=.env scripts/bootstrap.ts",
+		"bootstrap:export-api": "tsx --env-file=.env scripts/bootstrap.ts --export-api",
+		"export-api": "tsx --env-file=.env scripts/bootstrap.ts --export-api --skip-registry-operations",
 		"force-rebuild": "tsx --env-file=.env scripts/bootstrap.ts --force-rebuild",
 		"serve": "tsx --env-file=.env scripts/bootstrap.ts --serve",
 		"clean": "tsx --env-file=.env scripts/clean.ts dist",
@@ -17,12 +19,12 @@
 		"clean:all": "tsx --env-file=.env scripts/clean.ts all",
 		"scaffold": "tsx --env-file=.env scripts/scaffold.ts",
 		"scaffold:regen": "tsx --env-file=.env scripts/scaffold.ts --regenerate",
-		"create-npmc": "tsx --env-file=.env scripts/create-npmc.ts"
+		"create-npmrc": "tsx --env-file=.env scripts/create-npmrc.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^25.6.0",
 		"tsx": "^4.21.0",
 		"typescript": "^6.0.3",
-		"verdaccio": "^6.5.1"
+		"verdaccio": "^6.5.2"
 	}
 }
