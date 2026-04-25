@@ -57,11 +57,14 @@ async function main(): Promise<void> {
 			log('Registry staying alive (Ctrl+C to stop)')
 			await new Promise<never>(() => { /* never resolves -- signal handlers exit */ })
 		}
-	} finally {
-		if (!MODE_SERVE) await registry.shutdown(handle)
+		
+		log(handle.reused ? 'Done, left existing registry running' : 'Done, shut down registry')
+		await registry.shutdown(handle)
+	}
+	catch (error) {
+		exitWithError(error)
 	}
 
-	log(handle.reused ? 'Done, left existing registry running' : 'Done, shut down registry')
 }
 
 function installSignalHandlers(registry: Registry, handle: RegistryHandle): void {

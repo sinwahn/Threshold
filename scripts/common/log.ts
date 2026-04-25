@@ -16,7 +16,13 @@ export function warn(...args: unknown[]): void {
 export function exitWithError(error: unknown): never {
 	console.error(error)
 	const subprocess = error as { stdout?: string | Buffer, stderr?: string | Buffer }
-	if (subprocess.stdout) process.stderr.write(subprocess.stdout)
-	if (subprocess.stderr) process.stderr.write(subprocess.stderr)
+	if (subprocess.stdout) {
+		console.error(subprocess.stdout)
+		process.stdout.write(subprocess.stdout)
+	}
+	if (subprocess.stderr) {
+		console.error(subprocess.stderr)
+		process.stderr.write(subprocess.stderr)
+	}
 	process.exit(1)
 }
